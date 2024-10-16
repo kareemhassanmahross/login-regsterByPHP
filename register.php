@@ -1,4 +1,5 @@
 <?php 
+session_start();
 if($_REQUEST){
 require "connection.php";
 $errorMsg = "";
@@ -29,9 +30,8 @@ if(!empty($file)){
     
     $fullname = $_REQUEST['fullname'];
     $email = $_REQUEST['email'];
-    $hash_pass = $_REQUEST['password'];
-    $hash = password_hash($hash_pass,PASSWORD_DEFAULT); 
-    $password = $hash;
+    $password1 = $_REQUEST['password'];
+    $password = password_hash($password1,PASSWORD_BCRYPT,array("cost"=>12));
     $image = $newFileName ;
 
     $data = [
@@ -43,10 +43,22 @@ if(!empty($file)){
 
    
     if($error != 1){
-        $sql = "INSERT INTO users (fullname,email,password,image) VALUES (:fullname, :email, :password, :image)";
-        move_uploaded_file( $_FILES['iamge']['tmp_name'], $LocationImage );
-        $pdo->prepare($sql)->execute($data);
-        header("Location: index1.php");
+        $sql  = "SELECT email, COUNT(*) AS num FROM users WHERE `email` = "."'".$email."'"; 
+        // echo $sql;
+        $stmt = $pdo->prepare($sql); 
+        $stmt -> execute();
+        $row = $stmt -> fetch(PDO::FETCH_ASSOC);
+        if($row['num'] == 0 ){
+            $sql = "INSERT INTO users (fullname,email,password,image) VALUES (:fullname, :email, :password, :image)";
+            move_uploaded_file( $_FILES['iamge']['tmp_name'], $LocationImage );
+            $pdo->prepare($sql)->execute($data);
+            $_SESSION['user'] = $data['email'];
+            header("Location: profile.php");
+            
+        }else {
+           $rrorMsg = "this mail is orady exist";
+        } 
+        
     }
 
     

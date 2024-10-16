@@ -1,3 +1,31 @@
+
+<?php
+session_start();
+
+if($_REQUEST){
+    require "connection.php";
+
+    $email = $_REQUEST['email'];
+    $password = $_REQUEST['password'];
+
+
+    if($email != "" && $password != ""){
+        $sql = "SELECT * FROM `users` WHERE `email` ="."'".$email."'";
+        $stmt = $pdo->prepare($sql); 
+        $stmt -> execute();
+        $user = $stmt -> fetch(PDO::FETCH_ASSOC);
+        $validpassword = password_verify($password,$user['password']) ;
+        If($validpassword === false){
+            $errorMsg = "Password is invalid .";
+        }else{
+            $_SESSION['user'] = $email;
+            header("Location: profile.php");
+        }
+
+    }
+}
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,6 +38,11 @@
 <body>
     <div class="container">
         <h1 class="text-right">Login</h1>
+        <?php if(isset($errorMsg)) { ?>
+        <div class="alert alert-danger" role="alert">
+            <?php echo $errorMsg ;?>
+        </div>
+        <?php } ?>
         <form>
             <div class="form-group">
                 <label for="email">E-Mail</label>
