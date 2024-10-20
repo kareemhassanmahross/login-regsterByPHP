@@ -52,8 +52,10 @@ if($_REQUEST){
                 <label for="password">Password</label>
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
-            <button type="submit" class="btn l-btn">Login</button>
+            <button type="submit" class="btn btn-danger">Login</button>
+            <a href="register.php" class="btn btn-link"> SIGN UP </a> 
         </form>
+      
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.0.0-beta3/js/bootstrap.bundle.min.js"></script>

@@ -1,68 +1,121 @@
 <?php 
 session_start();
+
 if($_REQUEST){
 require "connection.php";
-$errorMsg = "";
-$error = 0;
+function fullname($fullname){
+    $pattern = '/^[A-Za-z][A-Za-z\'\-]+([\ A-Za-z][A-Za-z\'\-]+)*/';
+    $checkName = preg_match($pattern, $fullname);
+    return $checkName;
+}
 
-$file = $_FILES['iamge']['tmp_name'];
+function email($email){
+  $pattern ="/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/";
+  $checkEmail = preg_match($pattern, $email);
+  return $checkEmail;
+}
+
+function image($file_iamge){
+    if(!empty($file_iamge)){
+        $fileName = pathinfo($_FILES['iamge']['name']);
+        $fileExtension = $fileName['extension'];
+        $fileSize = $_FILES['iamge']['size'];
+        if($fileSize > 2000000){
+            $errorMsg = "File is Over 2 Mb in size <br>";
+            return $errorMsg;
+        }
+    
+        $allowedExtension = array('jpeg','png','jpg','jfif');
+         
+        if(!in_array( $fileExtension,$allowedExtension)){
+            $errorMsg = "File type is not allowed  'jpeg','png','jpg','jfif' <br>";
+            return $errorMsg;
+        }
+        return 1;
+    }else{
+        $errorMsg = "You must enter a photo";
+        return $errorMsg;
+    }
+}
 
 
-if(!empty($file)){
+function checkPassword($password, $confirm_password){
+     if($password ===  $confirm_password ){
+        $pattern ="/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/";
+        $checkPassword = preg_match($pattern, $password);
+        if($checkPassword == 1){
+            return $checkPassword;
+        }else{
+            return "The password must be contain at lest one char cabital and at lest 8 chars and atlest on spashial char";
+        }
+     }else{
+        return "Password is not confirmed with confirm password";
+     }
+}
+
+$file_iamge       = $_FILES['iamge']['tmp_name'];
+$fullname         = $_REQUEST['fullname'];
+$email            = $_REQUEST['email'];
+$password         = $_REQUEST['password'];
+$confirm_password = $_REQUEST['confirm-password'];
+$imageValidate    = image($file_iamge);
+$fullNameValidate = fullname($fullname);
+$emailValidate    = email($email);
+$passwordValidate = checkPassword($password,$confirm_password);
+
+$successMass = [];
+$errorMsg    = []; 
+
+
+if($imageValidate == 1 && $fullNameValidate == 1  && $emailValidate == 1 && $passwordValidate == 1){
+    array_push($successMass,"You Are Registerd Successfully");
     $fileName = pathinfo($_FILES['iamge']['name']);
     $fileExtension = $fileName['extension'];
     $fileSize = $_FILES['iamge']['size'];
     $ss = time() * $fileSize;
     $newFileName = $fileName['filename'] . '_' . $fileSize . '_' .time() ."_" . $ss . '.' . $fileExtension;
     $LocationImage = "imagesUsers/" . $newFileName;
-    if($fileSize > 2000000){
-        $errorMsg = "File is Over 2 Mb in size <br>";
-        $error = 1; 
-    }
 
-    $allowedExtension = array('jpeg','png','jpg','jfif');
-     
-    if(!in_array( $fileExtension,$allowedExtension)){
-        $errorMsg = "File type is not allowed  'jpeg','png','jpg','jfif' <br>";
-        $error = 1; 
-    }
-
-    
     $fullname = $_REQUEST['fullname'];
     $email = $_REQUEST['email'];
     $password1 = $_REQUEST['password'];
     $password = password_hash($password1,PASSWORD_BCRYPT,array("cost"=>12));
-    $image = $newFileName ;
-
+    $image = $newFileName;
     $data = [
       "fullname" => $fullname,
       "email" => $email,
       "password" => $password,
       "image" => $image
     ];
+    $sql  = "SELECT email, COUNT(*) AS num FROM users WHERE `email` = "."'".$email."'"; 
+    $stmt = $pdo->prepare($sql); 
+    $stmt -> execute();
+    $row = $stmt -> fetch(PDO::FETCH_ASSOC);
+    if($row['num'] == 0 ){
+        $sql = "INSERT INTO users (fullname,email,password,image) VALUES (:fullname, :email, :password, :image)";
+        move_uploaded_file( $_FILES['iamge']['tmp_name'], $LocationImage );
+        $pdo->prepare($sql)->execute($data);
+        $_SESSION['user'] = $data['email'];
+        header("Location: profile.php");
+    }else {
+       array_push($errorMsg,"this mail is orady exist");
+    } 
 
-   
-    if($error != 1){
-        $sql  = "SELECT email, COUNT(*) AS num FROM users WHERE `email` = "."'".$email."'"; 
-        // echo $sql;
-        $stmt = $pdo->prepare($sql); 
-        $stmt -> execute();
-        $row = $stmt -> fetch(PDO::FETCH_ASSOC);
-        if($row['num'] == 0 ){
-            $sql = "INSERT INTO users (fullname,email,password,image) VALUES (:fullname, :email, :password, :image)";
-            move_uploaded_file( $_FILES['iamge']['tmp_name'], $LocationImage );
-            $pdo->prepare($sql)->execute($data);
-            $_SESSION['user'] = $data['email'];
-            header("Location: profile.php");
-            
-        }else {
-           $rrorMsg = "this mail is orady exist";
-        } 
-        
-    }
+}
+if($imageValidate != 1){
+    array_push($errorMsg,$imageValidate);
+}
+if($fullNameValidate != 1){
+    array_push($errorMsg,"Full Name Must be contain at lest one char Cabital");
+}
+if($emailValidate != 1){
+    array_push($errorMsg,"Email Must Be like 'example@example.com'");
+}if($passwordValidate != 1){
+    array_push($errorMsg,$passwordValidate);
+}
+$count = count($successMass);
+$count1 = count($errorMsg);
 
-    
-} 
 }
 
 
@@ -81,11 +134,34 @@ if(!empty($file)){
 
 <body>
     <div class="container">
-        <?php if(isset($errorMsg)) { ?>
-        <div class="alert alert-danger" role="alert">
-            <?php echo $errorMsg ;?>
+        <?php
+         if(isset($count)){
+         if($count >= 1) { 
+         if(isset($successMass)) { ?>
+        <div class="alert alert-success" role="alert">
+        <ul>
+                <?php foreach($successMass as $em) {
+                      echo "<li>".$em."<li>";
+                }
+                ?>
+            </ul>
         </div>
-        <?php } ?>
+        <?php }}}?>
+        <?php
+        if(isset($count1) >= 1) {
+        if($count1 >= 1) {
+        if(isset($errorMsg)) { ?>
+        <div class="alert alert-danger" role="alert">
+            <ul>
+                <?php foreach($errorMsg as $em) {
+                      echo "<li>".$em."<li>";
+                }
+                ?>
+            </ul>
+        </div>
+        <?php }}} ?>
+
+
         <h1> Register </h1>
         <form method="post" enctype="multipart/form-data">
             <div class="form-group">
