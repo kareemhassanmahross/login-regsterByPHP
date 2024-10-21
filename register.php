@@ -10,6 +10,7 @@ function fullname($fullname){
 }
 
 function email($email){
+  $email = trim($email);  
   $pattern ="/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/";
   $checkEmail = preg_match($pattern, $email);
   return $checkEmail;
@@ -58,9 +59,9 @@ $fullname         = $_REQUEST['fullname'];
 $email            = $_REQUEST['email'];
 $password         = $_REQUEST['password'];
 $confirm_password = $_REQUEST['confirm-password'];
-$imageValidate    = image($file_iamge);
 $fullNameValidate = fullname($fullname);
 $emailValidate    = email($email);
+$imageValidate    = image($file_iamge);
 $passwordValidate = checkPassword($password,$confirm_password);
 
 $successMass = [];
@@ -68,7 +69,7 @@ $errorMsg    = [];
 
 
 if($imageValidate == 1 && $fullNameValidate == 1  && $emailValidate == 1 && $passwordValidate == 1){
-    array_push($successMass,"You Are Registerd Successfully");
+    
     $fileName = pathinfo($_FILES['iamge']['name']);
     $fileExtension = $fileName['extension'];
     $fileSize = $_FILES['iamge']['size'];
@@ -96,21 +97,24 @@ if($imageValidate == 1 && $fullNameValidate == 1  && $emailValidate == 1 && $pas
         move_uploaded_file( $_FILES['iamge']['tmp_name'], $LocationImage );
         $pdo->prepare($sql)->execute($data);
         $_SESSION['user'] = $data['email'];
+        array_push($successMass,"You Are Registerd Successfully");
         header("Location: profile.php");
     }else {
        array_push($errorMsg,"this mail is orady exist");
     } 
 
 }
-if($imageValidate != 1){
-    array_push($errorMsg,$imageValidate);
-}
+
 if($fullNameValidate != 1){
     array_push($errorMsg,"Full Name Must be contain at lest one char Cabital");
 }
 if($emailValidate != 1){
     array_push($errorMsg,"Email Must Be like 'example@example.com'");
-}if($passwordValidate != 1){
+}
+if($imageValidate != 1){
+    array_push($errorMsg,$imageValidate);
+}
+if($passwordValidate != 1){
     array_push($errorMsg,$passwordValidate);
 }
 $count = count($successMass);
@@ -134,6 +138,7 @@ $count1 = count($errorMsg);
 
 <body>
     <div class="container">
+
         <?php
          if(isset($count)){
          if($count >= 1) { 
@@ -141,7 +146,7 @@ $count1 = count($errorMsg);
         <div class="alert alert-success" role="alert">
         <ul>
                 <?php foreach($successMass as $em) {
-                      echo "<li>".$em."<li>";
+                      echo "<li>".$em."</li>";
                 }
                 ?>
             </ul>
@@ -154,7 +159,7 @@ $count1 = count($errorMsg);
         <div class="alert alert-danger" role="alert">
             <ul>
                 <?php foreach($errorMsg as $em) {
-                      echo "<li>".$em."<li>";
+                      echo "<li>".$em."</li>";
                 }
                 ?>
             </ul>
@@ -166,11 +171,11 @@ $count1 = count($errorMsg);
         <form method="post" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="fullname">Full Name</label>
-                <input type="text" class="form-control" id="fullname" name="fullname" required>
+                <input type="text" class="form-control" id="fullname" name="fullname" >
             </div>
             <div class="form-group">
                 <label for="email">E-Mail</label>
-                <input type="email" class="form-control" id="email" name="email" required>
+                <input type="text" class="form-control" id="email" name="email" >
             </div>
             <div>
                 <label for="formFile" class="form-label">Image</label>
@@ -178,11 +183,11 @@ $count1 = count($errorMsg);
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+                <input type="password" class="form-control" id="password" name="password" >
             </div>
             <div class="form-group">
                 <label for="confirm-password">confirm-password</label>
-                <input type="password" class="form-control" id="confirm-password" name="confirm-password" required>
+                <input type="password" class="form-control" id="confirm-password" name="confirm-password" >
             </div>
             <input class="btn  l-btn" type="submit" value="Submit">
         </form>
