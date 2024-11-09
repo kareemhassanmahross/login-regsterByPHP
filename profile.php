@@ -12,7 +12,7 @@ if($email){
     $user = $stmt -> fetch(PDO::FETCH_ASSOC);
     $image = $user['image'];
 }else{
-    header("Location: login.php");
+    header("Location: index.php");
 }
 
 

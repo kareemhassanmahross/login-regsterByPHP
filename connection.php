@@ -3,7 +3,7 @@
 $host = 'localhost';
 $user = 'root';
 $password = '';
-$db = "test";
+$db = "login";
 
 $dsn = "mysql:host=$host;dbname=$db;charset=UTF8";
 

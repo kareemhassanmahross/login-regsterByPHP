@@ -189,7 +189,8 @@ $count1 = count($errorMsg);
                 <label for="confirm-password">confirm-password</label>
                 <input type="password" class="form-control" id="confirm-password" name="confirm-password" >
             </div>
-            <input class="btn  l-btn" type="submit" value="Submit">
+            <input class="btn  l-btn" type="submit" value="Submit"><br><br>
+            <a href="index.php">SIGN IN </a>
         </form>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
